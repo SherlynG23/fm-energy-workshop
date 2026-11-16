@@ -38,7 +38,14 @@ st.set_page_config(
 BASE_DIR = Path(__file__).parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-raw_url = os.environ["DATABASE_URL"]
+def _get_secret(key: str) -> str:
+    """Read from st.secrets (Streamlit Cloud) or fall back to os.environ (local)."""
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return os.environ[key]
+
+raw_url = _get_secret("DATABASE_URL")
 conn_str = re.sub(r"[&?]channel_binding=require", "", raw_url)
 host = re.search(r"@([^/]+)/", conn_str).group(1)
 ENDPOINT = f"https://{host}/sql"
